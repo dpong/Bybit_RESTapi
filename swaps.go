@@ -216,7 +216,6 @@ func (p *Client) SwapPositions() (result *SwapPositionsResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
-	// in Close()
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
@@ -249,7 +248,6 @@ func (p *Client) SetLeverage(symbol string, leverage int) (result *SetLeverageRe
 	if err != nil {
 		return nil, err
 	}
-	// in Close()
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
@@ -284,7 +282,6 @@ func (p *Client) GetRiskLimit(symbol string) (result *GetRiskLimitResponse, err 
 	if err != nil {
 		return nil, err
 	}
-	// in Close()
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
@@ -292,27 +289,19 @@ func (p *Client) GetRiskLimit(symbol string) (result *GetRiskLimitResponse, err 
 	return result, nil
 }
 
-type GetWalletBalanceResponse struct {
+// very annoying struct design
+type GetSwapWalletBalanceResponse struct {
 	RetCode int    `json:"ret_code"`
 	RetMsg  string `json:"ret_msg"`
 	ExtCode string `json:"ext_code"`
 	ExtInfo string `json:"ext_info"`
 	Result  struct {
-		Btc struct {
-			Equity           float64 `json:"equity"`
-			AvailableBalance float64 `json:"available_balance"`
-			UsedMargin       float64 `json:"used_margin"`
-			OrderMargin      float64 `json:"order_margin"`
-			PositionMargin   float64 `json:"position_margin"`
-			OccClosingFee    float64 `json:"occ_closing_fee"`
-			OccFundingFee    float64 `json:"occ_funding_fee"`
-			WalletBalance    float64 `json:"wallet_balance"`
-			RealisedPnl      float64 `json:"realised_pnl"`
-			UnrealisedPnl    float64 `json:"unrealised_pnl"`
-			CumRealisedPnl   float64 `json:"cum_realised_pnl"`
-			GivenCash        float64 `json:"given_cash"`
-			ServiceCash      float64 `json:"service_cash"`
-		} `json:"BTC"`
+		BTC  SwapWalletBalanceDetail `json:"BTC,omitempty"`
+		ETH  SwapWalletBalanceDetail `json:"ETH,omitempty"`
+		EOS  SwapWalletBalanceDetail `json:"EOS,omitempty"`
+		XRP  SwapWalletBalanceDetail `json:"XRP,omitempty"`
+		DOT  SwapWalletBalanceDetail `json:"DOT,omitempty"`
+		USDT SwapWalletBalanceDetail `json:"USDT,omitempty"`
 	} `json:"result"`
 	TimeNow          string `json:"time_now"`
 	RateLimitStatus  int    `json:"rate_limit_status"`
@@ -320,12 +309,27 @@ type GetWalletBalanceResponse struct {
 	RateLimit        int    `json:"rate_limit"`
 }
 
-func (p *Client) GetWalletBalance() (result *GetWalletBalanceResponse, err error) {
+type SwapWalletBalanceDetail struct {
+	Equity           float64 `json:"equity"`
+	AvailableBalance float64 `json:"available_balance"`
+	UsedMargin       float64 `json:"used_margin"`
+	OrderMargin      float64 `json:"order_margin"`
+	PositionMargin   float64 `json:"position_margin"`
+	OccClosingFee    float64 `json:"occ_closing_fee"`
+	OccFundingFee    float64 `json:"occ_funding_fee"`
+	WalletBalance    float64 `json:"wallet_balance"`
+	RealisedPnl      float64 `json:"realised_pnl"`
+	UnrealisedPnl    float64 `json:"unrealised_pnl"`
+	CumRealisedPnl   float64 `json:"cum_realised_pnl"`
+	GivenCash        float64 `json:"given_cash"`
+	ServiceCash      float64 `json:"service_cash"`
+}
+
+func (p *Client) GetSwapWalletBalance() (result *GetSwapWalletBalanceResponse, err error) {
 	res, err := p.sendRequest("swap", http.MethodGet, "/v2/private/wallet/balance", nil, nil, true)
 	if err != nil {
 		return nil, err
 	}
-	// in Close()
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err

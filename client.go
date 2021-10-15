@@ -55,7 +55,6 @@ func (p *Client) newRequest(product, method, spath string, body []byte, params *
 		q.Add("api_key", p.key)
 		q.Add("timestamp", strconv.Itoa(int(timestamp)))
 	}
-
 	host := HostHub(product)
 	url, err := p.sign(host, method, spath, &q, auth)
 	if err != nil {
@@ -65,7 +64,12 @@ func (p *Client) newRequest(product, method, spath string, body []byte, params *
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Content-Type", "application/json")
+	switch method {
+	case "POST":
+		req.Header.Set("Content-Type", "application/json")
+	default:
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 	return req, nil
 }
 
@@ -89,10 +93,7 @@ func (c *Client) sendRequest(product, method, spath string, body []byte, params 
 }
 
 func HostHub(product string) (host string) {
-	switch product {
-	case "swap":
-		host = "api.bybit.com"
-	}
+	host = "api.bybit.com"
 	return host
 }
 

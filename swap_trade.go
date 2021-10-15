@@ -63,7 +63,6 @@ func (p *Client) SwapPlaceOrder(symbol, side, order_type string, price, qty deci
 	if err != nil {
 		return nil, err
 	}
-	// in Close()
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
@@ -185,6 +184,87 @@ func (p *Client) SwapReplaceOrder(symbol, oid string, price, qty decimal.Decimal
 		return nil, err
 	}
 	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/order/create", body, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	// in Close()
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type SwapGetAllOpenOrdersResponse struct {
+	RetCode int    `json:"ret_code"`
+	RetMsg  string `json:"ret_msg"`
+	ExtCode string `json:"ext_code"`
+	Result  struct {
+		CurrentPage int `json:"current_page"`
+		LastPage    int `json:"last_page"`
+		Data        []struct {
+			OrderID        string  `json:"order_id"`
+			UserID         int     `json:"user_id"`
+			Symbol         string  `json:"symbol"`
+			Side           string  `json:"side"`
+			OrderType      string  `json:"order_type"`
+			Price          float64 `json:"price"`
+			Qty            float64 `json:"qty"`
+			TimeInForce    string  `json:"time_in_force"`
+			OrderStatus    string  `json:"order_status"`
+			LastExecPrice  float64 `json:"last_exec_price"`
+			CumExecQty     float64 `json:"cum_exec_qty"`
+			CumExecValue   float64 `json:"cum_exec_value"`
+			CumExecFee     float64 `json:"cum_exec_fee"`
+			OrderLinkID    string  `json:"order_link_id"`
+			ReduceOnly     bool    `json:"reduce_only"`
+			CloseOnTrigger bool    `json:"close_on_trigger"`
+			CreatedTime    string  `json:"created_time"`
+			UpdatedTime    string  `json:"updated_time"`
+		} `json:"data"`
+	} `json:"result"`
+	ExtInfo          interface{} `json:"ext_info"`
+	TimeNow          string      `json:"time_now"`
+	RateLimitStatus  int         `json:"rate_limit_status"`
+	RateLimitResetMs int64       `json:"rate_limit_reset_ms"`
+	RateLimit        int         `json:"rate_limit"`
+}
+
+func (p *Client) SwapGetAllOpenOrders(symbol string) (result *SwapGetAllOpenOrdersResponse, err error) {
+	params := make(map[string]string)
+	params["symbol"] = strings.ToUpper(symbol)
+	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/order/list", nil, &params, true)
+	if err != nil {
+		return nil, err
+	}
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type SwapCancelAllOrdersResponse struct {
+	RetCode          int      `json:"ret_code"`
+	RetMsg           string   `json:"ret_msg"`
+	ExtCode          string   `json:"ext_code"`
+	ExtInfo          string   `json:"ext_info"`
+	Result           []string `json:"result"`
+	TimeNow          string   `json:"time_now"`
+	RateLimitStatus  int      `json:"rate_limit_status"`
+	RateLimitResetMs int64    `json:"rate_limit_reset_ms"`
+	RateLimit        int      `json:"rate_limit"`
+}
+
+// this method will consume 10 requests, be careful
+func (p *Client) SwapCancelAllOrders(symbol string) (result *SwapCancelAllOrdersResponse, err error) {
+	params := make(map[string]interface{})
+	params["symbol"] = strings.ToUpper(symbol)
+	body, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/order/cancel-all", body, nil, true)
 	if err != nil {
 		return nil, err
 	}
