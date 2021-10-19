@@ -7,6 +7,11 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+const (
+	StatusNew     = "New"
+	StatusPartial = "PartiallyFilled"
+)
+
 type SwapPlaceOrderResponse struct {
 	RetCode          int                  `json:"ret_code"`
 	RetMsg           string               `json:"ret_msg"`
@@ -230,9 +235,11 @@ type SwapGetAllOpenOrdersResponse struct {
 	RateLimit        int         `json:"rate_limit"`
 }
 
-func (p *Client) SwapGetAllOpenOrders(symbol string) (result *SwapGetAllOpenOrdersResponse, err error) {
+// New / PartiallyFilled
+func (p *Client) SwapGetAllOpenOrders(symbol, status string) (result *SwapGetAllOpenOrdersResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
+	params["order_status"] = status
 	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/order/list", nil, &params, true)
 	if err != nil {
 		return nil, err

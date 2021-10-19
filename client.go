@@ -117,6 +117,7 @@ func (c *Client) sign(host, method, spath string, q *url.Values, auth bool) (str
 	}
 	buffer.WriteString("?")
 	par := q.Encode()
+	//par := q.QueryEscape(",")
 	buffer.WriteString(par)
 	if !auth {
 		return buffer.String(), nil
