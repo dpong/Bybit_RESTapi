@@ -365,7 +365,7 @@ type GetLastFundingPaymentResponse struct {
 func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPaymentResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
-	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/funding/prev-funding", nil, &params, false)
+	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/funding/prev-funding", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
