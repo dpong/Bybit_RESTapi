@@ -3,6 +3,7 @@ package bybitapi
 import (
 	"net/http"
 	"strings"
+	"time"
 )
 
 type LastInfoForSymbolResponse struct {
@@ -332,6 +333,39 @@ type SwapWalletBalanceDetail struct {
 
 func (p *Client) GetSwapWalletBalance() (result *GetSwapWalletBalanceResponse, err error) {
 	res, err := p.sendRequest("swap", http.MethodGet, "/v2/private/wallet/balance", nil, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type GetLastFundingPaymentResponse struct {
+	RetCode int    `json:"ret_code"`
+	RetMsg  string `json:"ret_msg"`
+	ExtCode string `json:"ext_code"`
+	ExtInfo string `json:"ext_info"`
+	Result  struct {
+		Symbol      string    `json:"symbol"`
+		Side        string    `json:"side"`
+		Size        float64   `json:"size"`
+		FundingRate float64   `json:"funding_rate"`
+		ExecFee     float64   `json:"exec_fee"`
+		ExecTime    time.Time `json:"exec_time"`
+	} `json:"result"`
+	TimeNow          string `json:"time_now"`
+	RateLimitStatus  int    `json:"rate_limit_status"`
+	RateLimitResetMs int64  `json:"rate_limit_reset_ms"`
+	RateLimit        int    `json:"rate_limit"`
+}
+
+func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPaymentResponse, err error) {
+	params := make(map[string]string)
+	params["symbol"] = strings.ToUpper(symbol)
+	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/funding/prev-funding", nil, &params, false)
 	if err != nil {
 		return nil, err
 	}
