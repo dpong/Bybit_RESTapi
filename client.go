@@ -50,12 +50,14 @@ func (p *Client) newRequest(product, method, spath string, body []byte, params *
 			q.Add(k, v)
 		}
 	}
+	var timestamp int64
 	if auth {
-		timestamp := time.Now().UnixNano() / 1e6
+		timestamp = time.Now().UnixNano() / 1e6
 		q.Add("api_key", p.key)
 		q.Add("timestamp", strconv.Itoa(int(timestamp)))
 	}
 	host := HostHub(product)
+
 	url, err := p.sign(host, method, spath, &q, auth)
 	if err != nil {
 		return nil, err
@@ -66,7 +68,12 @@ func (p *Client) newRequest(product, method, spath string, body []byte, params *
 	}
 	switch method {
 	case "POST":
-		req.Header.Set("Content-Type", "application/json")
+		switch product {
+		case "swap":
+			req.Header.Set("Content-Type", "application/json")
+		case "spot":
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
 	default:
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}

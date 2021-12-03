@@ -375,3 +375,73 @@ func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPay
 	}
 	return result, nil
 }
+
+type GetSwapRiskLimitResposnse struct {
+	RetCode int                      `json:"ret_code"`
+	RetMsg  string                   `json:"ret_msg"`
+	ExtCode string                   `json:"ext_code"`
+	ExtInfo string                   `json:"ext_info"`
+	Result  []GetSwapRiskLimitDetail `json:"result"`
+	TimeNow string                   `json:"time_now"`
+}
+
+type GetSwapRiskLimitDetail struct {
+	ID             int      `json:"id"`
+	Symbol         string   `json:"symbol"`
+	Limit          float64  `json:"limit"`
+	MaintainMargin float64  `json:"maintain_margin"`
+	StartingMargin float64  `json:"starting_margin"`
+	Section        []string `json:"section"`
+	IsLowestRisk   int      `json:"is_lowest_risk"`
+	CreatedAt      string   `json:"created_at"`
+	UpdatedAt      string   `json:"updated_at"`
+	MaxLeverage    float64  `json:"max_leverage"`
+}
+
+func (p *Client) GetSwapRiskLimit(symbol string) (result *GetSwapRiskLimitResposnse, err error) {
+	params := make(map[string]string)
+	params["symbol"] = strings.ToUpper(symbol)
+	res, err := p.sendRequest("swap", http.MethodGet, "/public/linear/risk-limit", nil, &params, false)
+	if err != nil {
+		return nil, err
+	}
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type SetSwapRiskLimitResponse struct {
+	RetCode int    `json:"ret_code"`
+	RetMsg  string `json:"ret_msg"`
+	ExtCode string `json:"ext_code"`
+	ExtInfo string `json:"ext_info"`
+	Result  struct {
+		RiskID int `json:"risk_id"`
+	} `json:"result"`
+	TimeNow          string `json:"time_now"`
+	RateLimitStatus  int    `json:"rate_limit_status"`
+	RateLimitResetMs int64  `json:"rate_limit_reset_ms"`
+	RateLimit        int    `json:"rate_limit"`
+}
+
+func (p *Client) SetSwapRiskLimit(symbol, side string, riskID int) (result *SetLeverageResponse, err error) {
+	params := make(map[string]interface{})
+	params["symbol"] = strings.ToUpper(symbol)
+	params["side"] = side
+	params["risk_id"] = riskID
+	body, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/position/set-risk", body, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}

@@ -52,3 +52,37 @@ func (p *Client) GetSpotServerTime() (result *GetSpotServerTimeResponse, err err
 	}
 	return result, nil
 }
+
+type SpotsInfoResponse struct {
+	RetCode int         `json:"ret_code"`
+	RetMsg  string      `json:"ret_msg"`
+	ExtCode interface{} `json:"ext_code"`
+	ExtInfo interface{} `json:"ext_info"`
+	Result  []struct {
+		Name              string `json:"name"`
+		Alias             string `json:"alias"`
+		Basecurrency      string `json:"baseCurrency"`
+		Quotecurrency     string `json:"quoteCurrency"`
+		Baseprecision     string `json:"basePrecision"`
+		Quoteprecision    string `json:"quotePrecision"`
+		Mintradequantity  string `json:"minTradeQuantity"`
+		Mintradeamount    string `json:"minTradeAmount"`
+		Minpriceprecision string `json:"minPricePrecision"`
+		Maxtradequantity  string `json:"maxTradeQuantity"`
+		Maxtradeamount    string `json:"maxTradeAmount"`
+		Category          int    `json:"category"`
+	} `json:"result"`
+}
+
+func (p *Client) SpotsInfo() (swaps *SpotsInfoResponse, err error) {
+	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/symbols", nil, nil, false)
+	if err != nil {
+		return nil, err
+	}
+	// in Close()
+	err = decode(res, &swaps)
+	if err != nil {
+		return nil, err
+	}
+	return swaps, nil
+}
