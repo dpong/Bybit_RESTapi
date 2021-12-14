@@ -40,7 +40,7 @@ func (p *Client) CreateInternalTransfer(coin, from, to string, amount decimal.De
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("spot", http.MethodPost, "/asset/v1/private/transfer", body, nil, true)
+	res, err := p.sendRequest("swap", http.MethodPost, "/asset/v1/private/transfer", body, nil, true)
 	if err != nil {
 		return nil, err
 	}

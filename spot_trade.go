@@ -41,12 +41,6 @@ func (p *Client) SpotPlaceOrder(symbol, side, order_type string, price, qty deci
 	params["qty"] = qty.String()
 	params["type"] = order_type
 	params["time_in_force"] = "GTC"
-	/*
-		body, err := json.Marshal(params)
-		if err != nil {
-			return nil, err
-		}
-	*/
 	res, err := p.sendRequest("spot", http.MethodPost, "/spot/v1/order", nil, &params, true)
 	if err != nil {
 		return nil, err
@@ -81,13 +75,9 @@ type SpotCancelOrderResponse struct {
 }
 
 func (p *Client) SpotCancelOrder(oid string) (result *SpotCancelOrderResponse, err error) {
-	params := make(map[string]interface{})
+	params := make(map[string]string)
 	params["orderId"] = oid
-	body, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	res, err := p.sendRequest("spot", http.MethodDelete, "/spot/v1/order", body, nil, true)
+	res, err := p.sendRequest("spot", http.MethodDelete, "/spot/v1/order", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
@@ -158,13 +148,53 @@ type SpotGetOrderResponse struct {
 }
 
 func (p *Client) SpotGetOrder(oid string) (result *SpotGetOrderResponse, err error) {
-	params := make(map[string]interface{})
+	params := make(map[string]string)
 	params["orderId"] = oid
-	body, err := json.Marshal(params)
+	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/order", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/order", body, nil, true)
+	// in Close()
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type SpotGetAllOrdersResponse struct {
+	RetCode int         `json:"ret_code"`
+	RetMsg  string      `json:"ret_msg"`
+	ExtCode interface{} `json:"ext_code"`
+	ExtInfo interface{} `json:"ext_info"`
+	Result  []struct {
+		Accountid           string `json:"accountId"`
+		Exchangeid          string `json:"exchangeId"`
+		Symbol              string `json:"symbol"`
+		Symbolname          string `json:"symbolName"`
+		Orderlinkid         string `json:"orderLinkId"`
+		Orderid             string `json:"orderId"`
+		Price               string `json:"price"`
+		Origqty             string `json:"origQty"`
+		Executedqty         string `json:"executedQty"`
+		Cummulativequoteqty string `json:"cummulativeQuoteQty"`
+		Avgprice            string `json:"avgPrice"`
+		Status              string `json:"status"`
+		Timeinforce         string `json:"timeInForce"`
+		Type                string `json:"type"`
+		Side                string `json:"side"`
+		Stopprice           string `json:"stopPrice"`
+		Icebergqty          string `json:"icebergQty"`
+		Time                string `json:"time"`
+		Updatetime          string `json:"updateTime"`
+		Isworking           bool   `json:"isWorking"`
+	} `json:"result"`
+}
+
+func (p *Client) SpotGetAllOpenOrders(symbol string) (result *SpotGetAllOrdersResponse, err error) {
+	params := make(map[string]string)
+	params["symbol"] = symbol
+	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/open-orders", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
