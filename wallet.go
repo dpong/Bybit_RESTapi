@@ -2,6 +2,9 @@ package bybitapi
 
 import (
 	"net/http"
+	"net/url"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -36,6 +39,20 @@ func (p *Client) CreateInternalTransfer(coin, from, to string, amount decimal.De
 	params["amount"] = amount.String()
 	params["from_account_type"] = from
 	params["to_account_type"] = to
+	q := url.Values{}
+	if params != nil {
+		for k, v := range params {
+			q.Add(k, v)
+		}
+	}
+	timestamp := time.Now().UnixNano() / 1e6
+	q.Add("api_key", p.key)
+	q.Add("timestamp", strconv.Itoa(int(timestamp)))
+	par := q.Encode()
+	signature := p.getSigned(par)
+	params["api_key"] = p.key
+	params["timestamp"] = strconv.Itoa(int(timestamp))
+	params["sign"] = signature
 	body, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
