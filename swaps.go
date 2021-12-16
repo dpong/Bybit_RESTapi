@@ -261,40 +261,6 @@ func (p *Client) SetLeverage(symbol string, leverage int) (result *SetLeverageRe
 	return result, nil
 }
 
-type GetRiskLimitResponse struct {
-	RetCode int    `json:"ret_code"`
-	RetMsg  string `json:"ret_msg"`
-	ExtCode string `json:"ext_code"`
-	ExtInfo string `json:"ext_info"`
-	Result  []struct {
-		ID             int      `json:"id"`
-		Symbol         string   `json:"symbol"`
-		Limit          float64  `json:"limit"`
-		MaintainMargin float64  `json:"maintain_margin"`
-		StartingMargin float64  `json:"starting_margin"`
-		Section        []string `json:"section"`
-		IsLowestRisk   float64  `json:"is_lowest_risk"`
-		CreatedAt      string   `json:"created_at"`
-		UpdatedAt      string   `json:"updated_at"`
-		MaxLeverage    float64  `json:"max_leverage"`
-	} `json:"result"`
-	TimeNow string `json:"time_now"`
-}
-
-func (p *Client) GetRiskLimit(symbol string) (result *GetRiskLimitResponse, err error) {
-	params := make(map[string]string)
-	params["symbol"] = strings.ToUpper(symbol)
-	res, err := p.sendRequest("swap", http.MethodGet, "/public/linear/risk-limit", nil, &params, false)
-	if err != nil {
-		return nil, err
-	}
-	err = decode(res, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
 // very annoying struct design
 type GetSwapWalletBalanceResponse struct {
 	RetCode int    `json:"ret_code"`
