@@ -19,4 +19,13 @@ const (
 	SpotLimit      = "LIMIT"
 	SpotMARKET     = "MARKET"
 	SpotLimitMaker = "LIMIT_MAKER"
+
+	// userTrade
+	UserTradeBuy         = "buy"
+	UserTradeSell        = "sell"
+	Filled               = "FILLED"
+	PartialFilled        = "PARTIALLY_FILLED"
+	OrderTypeLimit       = "LIMIT"
+	OrderTypeMarketQuote = "MARKET_OF_QUOTE"
+	OrderTypeMarketBase  = "MARKET_OF_BASE"
 )

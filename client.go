@@ -19,10 +19,10 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Client struct {
-	key, secret    string
-	subaccount     string
-	client         *http.Client
-	privateChannel *privateChannelBranch
+	key, secret        string
+	subaccount         string
+	client             *http.Client
+	spotPrivateChannel *spotPrivateChannelBranch
 }
 
 func New(key, secret, subaccount string) *Client {

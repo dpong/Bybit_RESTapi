@@ -31,6 +31,7 @@ type SpotPlaceOrderResponse struct {
 
 // ex: "BTCUSDT"
 // order_type: SpotLimit, SpotMarket, SpotLimitMaker
+// if it's SpotMarket, qty is in quote asset, be careful
 func (p *Client) SpotPlaceOrder(symbol, side, order_type string, price, qty decimal.Decimal) (result *SpotPlaceOrderResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
