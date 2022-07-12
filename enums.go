@@ -9,4 +9,14 @@ const (
 	PostOnly = "PostOnly"
 	Limit    = "Limit"
 	Market   = "Market"
+
+	ProductPerp = "perp"
+	ProductSpot = "spot"
+	// for spot
+	SpotGTC        = "GTC"
+	SpotFOK        = "FOK"
+	SpotIOC        = "IOC"
+	SpotLimit      = "LIMIT"
+	SpotMARKET     = "MARKET"
+	SpotLimitMaker = "LIMIT_MAKER"
 )

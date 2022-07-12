@@ -30,12 +30,15 @@ type SpotPlaceOrderResponse struct {
 }
 
 // ex: "BTCUSDT"
+// order_type: SpotLimit, SpotMarket, SpotLimitMaker
 func (p *Client) SpotPlaceOrder(symbol, side, order_type string, price, qty decimal.Decimal) (result *SpotPlaceOrderResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
 	params["side"] = side
 	switch order_type {
-	case Limit:
+	case Market:
+		// pass
+	default:
 		params["price"] = price.String()
 	}
 	params["qty"] = qty.String()
@@ -99,6 +102,7 @@ type SpotCancelAllOrdersResponse struct {
 	} `json:"result"`
 }
 
+// cancel all orders for given symbol
 func (p *Client) SpotCancelAllOrders(symbol string) (result *SpotCancelOrderResponse, err error) {
 	params := make(map[string]interface{})
 	params["symbol"] = symbol
@@ -195,6 +199,34 @@ func (p *Client) SpotGetAllOpenOrders(symbol string) (result *SpotGetAllOrdersRe
 	params := make(map[string]string)
 	params["symbol"] = symbol
 	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/open-orders", nil, &params, true)
+	if err != nil {
+		return nil, err
+	}
+	// in Close()
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type SpotBatchCancelOrdersResponse struct {
+	RetCode int         `json:"ret_code"`
+	RetMsg  string      `json:"ret_msg"`
+	ExtCode interface{} `json:"ext_code"`
+	ExtInfo interface{} `json:"ext_info"`
+	Result  []struct {
+		OrderID string `json:"orderId"`
+		Code    string `json:"code"`
+	} `json:"result"`
+}
+
+// max 100 ids at once
+func (p *Client) SpotBatchCancelOrdersByID(ids []string) (result *SpotBatchCancelOrdersResponse, err error) {
+	opts := strings.Join(ids, ",")
+	params := make(map[string]string)
+	params["orderIds"] = opts
+	res, err := p.sendRequest("spot", http.MethodDelete, "/spot/order/batch-cancel-by-ids", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
