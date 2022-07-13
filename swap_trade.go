@@ -236,10 +236,9 @@ type SwapGetAllOpenOrdersResponse struct {
 }
 
 // New / PartiallyFilled
-func (p *Client) SwapGetAllOpenOrders(symbol, status string) (result *SwapGetAllOpenOrdersResponse, err error) {
+func (p *Client) SwapGetAllOpenOrders(symbol string) (result *SwapGetAllOpenOrdersResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
-	params["order_status"] = status
 	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/order/list", nil, &params, true)
 	if err != nil {
 		return nil, err

@@ -17,7 +17,7 @@ type SpotPlaceOrderResponse struct {
 		Symbol       string `json:"symbol"`
 		Symbolname   string `json:"symbolName"`
 		Orderlinkid  string `json:"orderLinkId"`
-		Orderid      string `json:"orderId"`
+		OrderID      string `json:"orderId"`
 		Transacttime string `json:"transactTime"`
 		Price        string `json:"price"`
 		Origqty      string `json:"origQty"`
