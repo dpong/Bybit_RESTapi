@@ -77,7 +77,7 @@ func (w *ws) sendPingPong(product string) error {
 	case "perp":
 		mm.Op = "ping"
 	case "spot":
-		mm.Ping = time.Now().UnixNano() / 1e6
+		mm.Ping = time.Now().UnixMilli()
 	}
 	message, err := json.Marshal(mm)
 	if err != nil {

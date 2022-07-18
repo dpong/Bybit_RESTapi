@@ -162,7 +162,7 @@ func (o *spotPrivateChannelBranch) maintain(ctx context.Context) error {
 			case <-innerErr:
 				return
 			case <-PingManaging.C:
-				if err := w.sendPingPong(Spot); err != nil {
+				if err := w.sendPingPong(ProductSpot); err != nil {
 					w.conn.SetReadDeadline(time.Now().Add(time.Millisecond * 5))
 					return
 				}
