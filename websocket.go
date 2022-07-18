@@ -86,6 +86,9 @@ func (w *ws) sendPingPong(product string) error {
 	if err := w.conn.WriteMessage(websocket.TextMessage, message); err != nil {
 		return err
 	}
+	
+
+
 	return nil
 }
 
