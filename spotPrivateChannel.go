@@ -153,7 +153,7 @@ func (o *spotPrivateChannelBranch) maintain(ctx context.Context) error {
 	}
 	w.conn.SetPingHandler(nil)
 	go func() {
-		PingManaging := time.NewTicker(time.Second * 30)
+		PingManaging := time.NewTicker(time.Second * 15)
 		defer PingManaging.Stop()
 		for {
 			select {
