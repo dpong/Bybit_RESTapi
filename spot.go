@@ -76,15 +76,15 @@ type SpotsInfoResponse struct {
 	} `json:"result"`
 }
 
-func (p *Client) SpotsInfo() (swaps *SpotsInfoResponse, err error) {
+func (p *Client) SpotsInfo() (resp *SpotsInfoResponse, err error) {
 	res, err := p.sendRequest("spot", http.MethodGet, "/spot/v1/symbols", nil, nil, false)
 	if err != nil {
 		return nil, err
 	}
 	// in Close()
-	err = decode(res, &swaps)
+	err = decode(res, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return swaps, nil
+	return resp, nil
 }

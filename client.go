@@ -70,9 +70,9 @@ func (p *Client) newRequest(product, method, spath string, body []byte, params *
 	switch method {
 	case "POST":
 		switch product {
-		case "swap":
+		case ProductPerp:
 			req.Header.Set("Content-Type", "application/json")
-		case "spot":
+		case ProductSpot:
 			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		}
 	default:
@@ -160,7 +160,7 @@ type ApiInfoResponse struct {
 }
 
 func (p *Client) ApiInfo() (result *ApiInfoResponse, err error) {
-	res, err := p.sendRequest("swap", http.MethodGet, "/v2/private/account/api-key", nil, nil, true)
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/v2/private/account/api-key", nil, nil, true)
 	if err != nil {
 		return nil, err
 	}

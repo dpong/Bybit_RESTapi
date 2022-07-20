@@ -42,7 +42,7 @@ type LastInfoForSymbolResponse struct {
 	TimeNow string `json:"time_now"`
 }
 
-func (p *Client) LastInfoForSymbol(symbol string) (swaps *LastInfoForSymbolResponse, err error) {
+func (p *Client) LastInfoForSymbol(symbol string) (resp *LastInfoForSymbolResponse, err error) {
 	params := make(map[string]string)
 	if symbol != "" {
 		params["symbol"] = strings.ToUpper(symbol)
@@ -51,19 +51,19 @@ func (p *Client) LastInfoForSymbol(symbol string) (swaps *LastInfoForSymbolRespo
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("swap", http.MethodGet, "/v2/public/tickers", body, &params, false)
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/v2/public/tickers", body, &params, false)
 	if err != nil {
 		return nil, err
 	}
 	// in Close()
-	err = decode(res, &swaps)
+	err = decode(res, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return swaps, nil
+	return resp, nil
 }
 
-type SwapsInfoResponse struct {
+type PerpsInfoResponse struct {
 	RetCode int    `json:"ret_code"`
 	RetMsg  string `json:"ret_msg"`
 	ExtCode string `json:"ext_code"`
@@ -96,17 +96,17 @@ type SwapsInfoResponse struct {
 	TimeNow string `json:"time_now"`
 }
 
-func (p *Client) SwapsInfo() (swaps *SwapsInfoResponse, err error) {
-	res, err := p.sendRequest("swap", http.MethodGet, "/v2/public/symbols", nil, nil, false)
+func (p *Client) PerpsInfo() (resp *PerpsInfoResponse, err error) {
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/v2/public/symbols", nil, nil, false)
 	if err != nil {
 		return nil, err
 	}
 	// in Close()
-	err = decode(res, &swaps)
+	err = decode(res, &resp)
 	if err != nil {
 		return nil, err
 	}
-	return swaps, nil
+	return resp, nil
 }
 
 type LastFundingRateResponse struct {
@@ -131,7 +131,7 @@ func (p *Client) LastFundingRate(symbol string) (result *LastFundingRateResponse
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("swap", http.MethodGet, "/public/linear/funding/prev-funding-rate", body, &params, false)
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/public/linear/funding/prev-funding-rate", body, &params, false)
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +164,7 @@ func (p *Client) SetAutoAddMargin(symbol, side string, AutoAdd bool) (result *Se
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/position/set-auto-add-margin", body, nil, true)
+	res, err := p.sendRequest(ProductPerp, http.MethodPost, "/private/linear/position/set-auto-add-margin", body, nil, true)
 	if err != nil {
 		return nil, err
 	}
@@ -176,19 +176,19 @@ func (p *Client) SetAutoAddMargin(symbol, side string, AutoAdd bool) (result *Se
 	return result, nil
 }
 
-type SwapPositionsResponse struct {
+type PerpPositionsResponse struct {
 	RetCode          int                   `json:"ret_code"`
 	RetMsg           string                `json:"ret_msg"`
 	ExtCode          string                `json:"ext_code"`
 	ExtInfo          string                `json:"ext_info"`
-	Result           []SwapPositionsDetail `json:"result"`
+	Result           []PerpPositionsDetail `json:"result"`
 	TimeNow          string                `json:"time_now"`
 	RateLimitStatus  int                   `json:"rate_limit_status"`
 	RateLimitResetMs int64                 `json:"rate_limit_reset_ms"`
 	RateLimit        int                   `json:"rate_limit"`
 }
 
-type SwapPositionsDetail struct {
+type PerpPositionsDetail struct {
 	Data struct {
 		UserID              int     `json:"user_id"`
 		Symbol              string  `json:"symbol"`
@@ -217,8 +217,8 @@ type SwapPositionsDetail struct {
 	IsValid bool `json:"is_valid"`
 }
 
-func (p *Client) SwapPositions() (result *SwapPositionsResponse, err error) {
-	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/position/list", nil, nil, true)
+func (p *Client) PerpPositions() (result *PerpPositionsResponse, err error) {
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/private/linear/position/list", nil, nil, true)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +250,7 @@ func (p *Client) SetLeverage(symbol string, leverage int) (result *SetLeverageRe
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/position/set-leverage", body, nil, true)
+	res, err := p.sendRequest(ProductPerp, http.MethodPost, "/private/linear/position/set-leverage", body, nil, true)
 	if err != nil {
 		return nil, err
 	}
@@ -261,27 +261,19 @@ func (p *Client) SetLeverage(symbol string, leverage int) (result *SetLeverageRe
 	return result, nil
 }
 
-// very annoying struct design
-type GetSwapWalletBalanceResponse struct {
-	RetCode int    `json:"ret_code"`
-	RetMsg  string `json:"ret_msg"`
-	ExtCode string `json:"ext_code"`
-	ExtInfo string `json:"ext_info"`
-	Result  struct {
-		BTC  SwapWalletBalanceDetail `json:"BTC,omitempty"`
-		ETH  SwapWalletBalanceDetail `json:"ETH,omitempty"`
-		EOS  SwapWalletBalanceDetail `json:"EOS,omitempty"`
-		XRP  SwapWalletBalanceDetail `json:"XRP,omitempty"`
-		DOT  SwapWalletBalanceDetail `json:"DOT,omitempty"`
-		USDT SwapWalletBalanceDetail `json:"USDT,omitempty"`
-	} `json:"result"`
-	TimeNow          string `json:"time_now"`
-	RateLimitStatus  int    `json:"rate_limit_status"`
-	RateLimitResetMs int64  `json:"rate_limit_reset_ms"`
-	RateLimit        int    `json:"rate_limit"`
+type GetPerpWalletBalanceResponse struct {
+	RetCode          int                                `json:"ret_code"`
+	RetMsg           string                             `json:"ret_msg"`
+	ExtCode          string                             `json:"ext_code"`
+	ExtInfo          string                             `json:"ext_info"`
+	Result           map[string]PerpWalletBalanceDetail `json:"result"`
+	TimeNow          string                             `json:"time_now"`
+	RateLimitStatus  int                                `json:"rate_limit_status"`
+	RateLimitResetMs int64                              `json:"rate_limit_reset_ms"`
+	RateLimit        int                                `json:"rate_limit"`
 }
 
-type SwapWalletBalanceDetail struct {
+type PerpWalletBalanceDetail struct {
 	Equity           float64 `json:"equity"`
 	AvailableBalance float64 `json:"available_balance"`
 	UsedMargin       float64 `json:"used_margin"`
@@ -297,8 +289,8 @@ type SwapWalletBalanceDetail struct {
 	ServiceCash      float64 `json:"service_cash"`
 }
 
-func (p *Client) GetSwapWalletBalance() (result *GetSwapWalletBalanceResponse, err error) {
-	res, err := p.sendRequest("swap", http.MethodGet, "/v2/private/wallet/balance", nil, nil, true)
+func (p *Client) GetPerpWalletBalance() (result *GetPerpWalletBalanceResponse, err error) {
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/v2/private/wallet/balance", nil, nil, true)
 	if err != nil {
 		return nil, err
 	}
@@ -331,7 +323,7 @@ type GetLastFundingPaymentResponse struct {
 func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPaymentResponse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
-	res, err := p.sendRequest("swap", http.MethodGet, "/private/linear/funding/prev-funding", nil, &params, true)
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/private/linear/funding/prev-funding", nil, &params, true)
 	if err != nil {
 		return nil, err
 	}
@@ -342,16 +334,16 @@ func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPay
 	return result, nil
 }
 
-type GetSwapRiskLimitResposnse struct {
+type GetPerpRiskLimitResposnse struct {
 	RetCode int                      `json:"ret_code"`
 	RetMsg  string                   `json:"ret_msg"`
 	ExtCode string                   `json:"ext_code"`
 	ExtInfo string                   `json:"ext_info"`
-	Result  []GetSwapRiskLimitDetail `json:"result"`
+	Result  []GetPerpRiskLimitDetail `json:"result"`
 	TimeNow string                   `json:"time_now"`
 }
 
-type GetSwapRiskLimitDetail struct {
+type GetPerpRiskLimitDetail struct {
 	ID             int      `json:"id"`
 	Symbol         string   `json:"symbol"`
 	Limit          float64  `json:"limit"`
@@ -364,10 +356,10 @@ type GetSwapRiskLimitDetail struct {
 	MaxLeverage    float64  `json:"max_leverage"`
 }
 
-func (p *Client) GetSwapRiskLimit(symbol string) (result *GetSwapRiskLimitResposnse, err error) {
+func (p *Client) GetPerpRiskLimit(symbol string) (result *GetPerpRiskLimitResposnse, err error) {
 	params := make(map[string]string)
 	params["symbol"] = strings.ToUpper(symbol)
-	res, err := p.sendRequest("swap", http.MethodGet, "/public/linear/risk-limit", nil, &params, false)
+	res, err := p.sendRequest(ProductPerp, http.MethodGet, "/public/linear/risk-limit", nil, &params, false)
 	if err != nil {
 		return nil, err
 	}
@@ -378,7 +370,7 @@ func (p *Client) GetSwapRiskLimit(symbol string) (result *GetSwapRiskLimitRespos
 	return result, nil
 }
 
-type SetSwapRiskLimitResponse struct {
+type SetPerpRiskLimitResponse struct {
 	RetCode int    `json:"ret_code"`
 	RetMsg  string `json:"ret_msg"`
 	ExtCode string `json:"ext_code"`
@@ -392,7 +384,7 @@ type SetSwapRiskLimitResponse struct {
 	RateLimit        int    `json:"rate_limit"`
 }
 
-func (p *Client) SetSwapRiskLimit(symbol, side string, riskID int) (result *SetLeverageResponse, err error) {
+func (p *Client) SetPerpRiskLimit(symbol, side string, riskID int) (result *SetLeverageResponse, err error) {
 	params := make(map[string]interface{})
 	params["symbol"] = strings.ToUpper(symbol)
 	params["side"] = side
@@ -401,7 +393,7 @@ func (p *Client) SetSwapRiskLimit(symbol, side string, riskID int) (result *SetL
 	if err != nil {
 		return nil, err
 	}
-	res, err := p.sendRequest("swap", http.MethodPost, "/private/linear/position/set-risk", body, nil, true)
+	res, err := p.sendRequest(ProductPerp, http.MethodPost, "/private/linear/position/set-risk", body, nil, true)
 	if err != nil {
 		return nil, err
 	}
