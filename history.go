@@ -1,6 +1,7 @@
 package bybitapi
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -51,6 +52,11 @@ func (p *Client) SpotHistoryKline(symbol, interval string, start, end time.Time)
 	if err != nil {
 		return nil, err
 	}
+	if raw.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", raw.RetCode, raw.RetMsg, raw.ExtCode, raw.ExtInfo)
+		return nil, errors.New(message)
+	}
+
 	result = new(SpotHistoryKlineResponse)
 	result.RetCode = raw.RetCode
 	result.RetMsg = raw.RetMsg

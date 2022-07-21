@@ -1,6 +1,8 @@
 package bybitapi
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -30,6 +32,10 @@ func (p *Client) GetSpotWalletBalance() (result *GetSpotWalletBalanceResponse, e
 	if err != nil {
 		return nil, err
 	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
 	return result, nil
 }
 
@@ -51,6 +57,10 @@ func (p *Client) GetSpotServerTime() (result *GetSpotServerTimeResponse, err err
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
 	}
 	return result, nil
 }
@@ -85,6 +95,10 @@ func (p *Client) SpotsInfo() (resp *SpotsInfoResponse, err error) {
 	err = decode(res, &resp)
 	if err != nil {
 		return nil, err
+	}
+	if resp.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", resp.ExtCode, resp.RetMsg, resp.ExtCode, resp.ExtInfo)
+		return nil, errors.New(message)
 	}
 	return resp, nil
 }

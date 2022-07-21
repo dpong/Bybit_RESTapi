@@ -1,6 +1,8 @@
 package bybitapi
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -54,6 +56,10 @@ func (p *Client) SpotPlaceOrder(symbol, side, order_type string, price, qty deci
 	if err != nil {
 		return nil, err
 	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
 	return result, nil
 }
 
@@ -90,6 +96,10 @@ func (p *Client) SpotCancelOrder(oid string) (result *SpotCancelOrderResponse, e
 	if err != nil {
 		return nil, err
 	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
 	return result, nil
 }
 
@@ -119,6 +129,10 @@ func (p *Client) SpotCancelAllOrders(symbol string) (result *SpotCancelOrderResp
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
 	}
 	return result, nil
 }
@@ -164,6 +178,10 @@ func (p *Client) SpotGetOrder(oid string) (result *SpotGetOrderResponse, err err
 	if err != nil {
 		return nil, err
 	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
 	return result, nil
 }
 
@@ -208,6 +226,10 @@ func (p *Client) SpotGetAllOpenOrders(symbol string) (result *SpotGetAllOrdersRe
 	if err != nil {
 		return nil, err
 	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
 	return result, nil
 }
 
@@ -235,6 +257,10 @@ func (p *Client) SpotBatchCancelOrdersByID(ids []string) (result *SpotBatchCance
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%d, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
 	}
 	return result, nil
 }

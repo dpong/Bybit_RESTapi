@@ -1,6 +1,8 @@
 package bybitapi
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -64,6 +66,10 @@ func (p *Client) CreateInternalTransfer(coin, from, to string, amount decimal.De
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
 	}
 	return result, nil
 }
