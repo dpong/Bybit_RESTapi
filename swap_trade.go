@@ -74,6 +74,9 @@ func (p *Client) PerpPlaceOrder(symbol, side, order_type string, price, qty deci
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -127,6 +130,9 @@ func (p *Client) PerpGetOrder(symbol, oid string) (result *PerpGetOrderResponse,
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -164,6 +170,9 @@ func (p *Client) PerpCancelOrder(symbol, oid string) (result *PerpGetOrderRespon
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
@@ -210,6 +219,9 @@ func (p *Client) PerpReplaceOrder(symbol, oid string, price, qty decimal.Decimal
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s", result.RetCode, result.RetMsg, result.ExtCode)
@@ -265,6 +277,9 @@ func (p *Client) PerpGetAllOpenOrders(symbol string) (result *PerpGetAllOpenOrde
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -300,6 +315,9 @@ func (p *Client) PerpCancelAllOrders(symbol string) (result *PerpCancelAllOrders
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)

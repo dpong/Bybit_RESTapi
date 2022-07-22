@@ -67,6 +67,9 @@ func (p *Client) CreateInternalTransfer(coin, from, to string, amount decimal.De
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)

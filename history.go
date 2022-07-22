@@ -52,6 +52,9 @@ func (p *Client) SpotHistoryKline(symbol, interval string, start, end time.Time)
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if raw.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", raw.RetCode, raw.RetMsg, raw.ExtCode, raw.ExtInfo)
 		return nil, errors.New(message)

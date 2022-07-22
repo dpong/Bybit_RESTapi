@@ -62,6 +62,9 @@ func (p *Client) LastInfoForSymbol(symbol string) (resp *LastInfoForSymbolRespon
 	if err != nil {
 		return nil, err
 	}
+	if resp == nil {
+		return nil, errors.New("response is nil")
+	}
 	if resp.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", resp.RetCode, resp.RetMsg, resp.ExtCode, resp.ExtInfo)
 		return nil, errors.New(message)
@@ -112,6 +115,9 @@ func (p *Client) PerpsInfo() (resp *PerpsInfoResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp == nil {
+		return nil, errors.New("response is nil")
+	}
 	if resp.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", resp.RetCode, resp.RetMsg, resp.ExtCode, resp.ExtInfo)
 		return nil, errors.New(message)
@@ -150,6 +156,9 @@ func (p *Client) LastFundingRate(symbol string) (result *LastFundingRateResponse
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -186,6 +195,9 @@ func (p *Client) SetAutoAddMargin(symbol, side string, AutoAdd bool) (result *Se
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
@@ -244,6 +256,9 @@ func (p *Client) PerpPositions() (result *PerpPositionsResponse, err error) {
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -283,6 +298,9 @@ func (p *Client) SetLeverage(symbol string, leverage int) (result *SetLeverageRe
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
@@ -328,6 +346,9 @@ func (p *Client) GetPerpWalletBalance() (result *GetPerpWalletBalanceResponse, e
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -364,6 +385,9 @@ func (p *Client) GetLastFundingPayment(symbol string) (result *GetLastFundingPay
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
@@ -405,6 +429,9 @@ func (p *Client) GetPerpRiskLimit(symbol string) (result *GetPerpRiskLimitRespos
 	if err != nil {
 		return nil, err
 	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
 		return nil, errors.New(message)
@@ -442,6 +469,9 @@ func (p *Client) SetPerpRiskLimit(symbol, side string, riskID int) (result *SetL
 	err = decode(res, &result)
 	if err != nil {
 		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
 	}
 	if result.RetCode != 0 {
 		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
