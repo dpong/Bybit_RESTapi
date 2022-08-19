@@ -23,6 +23,7 @@ type Client struct {
 	subaccount         string
 	client             *http.Client
 	spotPrivateChannel *spotPrivateChannelBranch
+	perpPrivateChannel *perpPrivateChannelBranch
 }
 
 func New(key, secret, subaccount string) *Client {

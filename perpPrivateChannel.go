@@ -2,13 +2,8 @@ package bybitapi
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/sha256"
 	"errors"
-	"fmt"
-	"io"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -17,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type spotPrivateChannelBranch struct {
+type perpPrivateChannelBranch struct {
 	cancel     *context.CancelFunc
 	key        string
 	secret     string
@@ -27,34 +22,12 @@ type spotPrivateChannelBranch struct {
 	logger     *logrus.Logger
 }
 
-type UserTradeData struct {
-	Symbol    string
-	Side      string
-	Oid       string
-	OrderType string
-	IsMaker   bool
-	Price     decimal.Decimal
-	Qty       decimal.Decimal
-	Fee       decimal.Decimal
-	FeeAsset  string
-	TimeStamp time.Time
-}
-
-type tradeDataMap struct {
-	mux sync.RWMutex
-	set map[string][]UserTradeData
-}
-
-func (c *Client) CloseSpotPrivateChannel() {
+func (c *Client) ClosePerpPrivateChannel() {
 	(*c.spotPrivateChannel.cancel)()
 }
 
-func (c *Client) InitSpotPrivateChannel(logger *log.Logger) {
-	c.spotPrivateChannelStream(logger)
-}
-
 // err is no trade set
-func (c *Client) ReadSpotUserTradeWithSymbol(symbol string) ([]UserTradeData, error) {
+func (c *Client) ReadPerpUserTradeWithSymbol(symbol string) ([]UserTradeData, error) {
 	c.spotPrivateChannel.tradeSets.mux.Lock()
 	defer c.spotPrivateChannel.tradeSets.mux.Unlock()
 	uSymbol := strings.ToUpper(symbol)
@@ -71,7 +44,7 @@ func (c *Client) ReadSpotUserTradeWithSymbol(symbol string) ([]UserTradeData, er
 
 // err is no trade
 // mix up with multiple symbol's trade data
-func (c *Client) ReadSpotUserTrade() ([]UserTradeData, error) {
+func (c *Client) ReadPerpUserTrade() ([]UserTradeData, error) {
 	c.spotPrivateChannel.tradeSets.mux.Lock()
 	defer c.spotPrivateChannel.tradeSets.mux.Unlock()
 	var result []UserTradeData
@@ -88,21 +61,13 @@ func (c *Client) ReadSpotUserTrade() ([]UserTradeData, error) {
 	return result, nil
 }
 
-func (c *Client) spotPrivateChannelStream(logger *logrus.Logger) {
-	o := new(spotPrivateChannelBranch)
-	ctx, cancel := context.WithCancel(context.Background())
-	o.cancel = &cancel
-	o.key = c.key
-	o.secret = c.secret
-	o.subaccount = c.subaccount
-	o.product = ProductSpot
-	o.tradeSets.set = make(map[string][]UserTradeData, 5)
-	o.logger = logger
-	go o.maintainSession(ctx)
-	c.spotPrivateChannel = o
+func (c *Client) InitPerpPrivateChannel(logger *log.Logger) {
+	c.perpPrivateChannelStream(logger)
 }
 
-func (u *spotPrivateChannelBranch) insertTrade(input *UserTradeData) {
+// internal
+
+func (u *perpPrivateChannelBranch) insertTrade(input *UserTradeData) {
 	u.tradeSets.mux.Lock()
 	defer u.tradeSets.mux.Unlock()
 	if _, ok := u.tradeSets.set[input.Symbol]; !ok {
@@ -117,7 +82,21 @@ func (u *spotPrivateChannelBranch) insertTrade(input *UserTradeData) {
 	}
 }
 
-func (o *spotPrivateChannelBranch) maintainSession(ctx context.Context) {
+func (c *Client) perpPrivateChannelStream(logger *logrus.Logger) {
+	o := new(perpPrivateChannelBranch)
+	ctx, cancel := context.WithCancel(context.Background())
+	o.cancel = &cancel
+	o.key = c.key
+	o.secret = c.secret
+	o.subaccount = c.subaccount
+	o.product = ProductSpot
+	o.tradeSets.set = make(map[string][]UserTradeData, 5)
+	o.logger = logger
+	go o.maintainSession(ctx)
+	c.perpPrivateChannel = o
+}
+
+func (o *perpPrivateChannelBranch) maintainSession(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -132,11 +111,11 @@ func (o *spotPrivateChannelBranch) maintainSession(ctx context.Context) {
 	}
 }
 
-func (o *spotPrivateChannelBranch) maintain(ctx context.Context) error {
+func (o *perpPrivateChannelBranch) maintain(ctx context.Context) error {
 	var duration time.Duration = 300
 	var w ws
 	innerErr := make(chan error, 1)
-	url := "wss://stream.bybit.com/spot/ws"
+	url := "wss://stream.bybit.com/realtime_private"
 	// wait 5 second, if the hand shake fail, will terminate the dail
 	dailCtx, _ := context.WithDeadline(ctx, time.Now().Add(time.Second*5))
 	conn, _, err := websocket.DefaultDialer.DialContext(dailCtx, url, nil)
@@ -184,7 +163,7 @@ func (o *spotPrivateChannelBranch) maintain(ctx context.Context) error {
 				innerErr <- errors.New("restart")
 				return err1
 			}
-			err2 := o.handleBybitPrivateChannel(o.product, &res)
+			err2 := o.handleBybitPrivateChannel(o.product, &res, &w)
 			if err2 != nil {
 				innerErr <- errors.New("restart")
 				return err2
@@ -197,31 +176,7 @@ func (o *spotPrivateChannelBranch) maintain(ctx context.Context) error {
 	} // end for
 }
 
-// official github
-func (w *ws) getAuth(key, secret string) error {
-	//generate signature
-	expires := fmt.Sprintf("%v", time.Now().Unix()) + "1000"
-	h := hmac.New(sha256.New, []byte(secret))
-	_val := "GET/realtime" + expires
-	io.WriteString(h, _val)
-	sign := fmt.Sprintf("%x", h.Sum(nil))
-	//auth
-	args := []string{key, expires, sign}
-	param := make(map[string]interface{})
-	param["op"] = "auth"
-	param["args"] = args
-	req, err := json.Marshal(param)
-	if err != nil {
-		return err
-	}
-	// sending
-	if err := w.conn.WriteMessage(websocket.TextMessage, req); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (o *spotPrivateChannelBranch) decodingInterface(message *[]byte) (res interface{}, err error) {
+func (o *perpPrivateChannelBranch) decodingInterface(message *[]byte) (res interface{}, err error) {
 	err = json.Unmarshal(*message, &res)
 	if err != nil {
 		return nil, err
@@ -229,10 +184,17 @@ func (o *spotPrivateChannelBranch) decodingInterface(message *[]byte) (res inter
 	return res, nil
 }
 
-func (o *spotPrivateChannelBranch) handleBybitPrivateChannel(product string, res *interface{}) error {
+func (o *perpPrivateChannelBranch) handleBybitPrivateChannel(product string, res *interface{}, w *ws) error {
 	switch message := (*res).(type) {
 	case map[string]interface{}:
-		if _, ok := message["topic"].(string); !ok {
+		if channel, ok := message["topic"].(string); ok {
+			if channel == "execution" {
+				datas := message["data"].([]interface{})
+				for _, data := range datas {
+					o.handleExecution(data.(map[string]interface{}))
+				}
+			}
+		} else {
 			if req, ok := message["request"]; ok {
 				switch request := req.(type) {
 				case string:
@@ -251,92 +213,82 @@ func (o *spotPrivateChannelBranch) handleBybitPrivateChannel(product string, res
 					case "subscribe":
 						chs := request["args"].([]interface{})
 						for _, ch := range chs {
-							log.Printf("Subscribed to Bybit %s %s\n", o.product, ch.(string))
+							o.logger.Printf("Subscribed to Bybit %s %s\n", o.product, ch.(string))
 						}
 					}
 				}
 			}
 			if auth, ok := message["auth"].(string); ok {
-				switch auth {
-				case "success":
-					log.Printf("Subscribed to Bybit %s private channel\n", o.product)
-				default:
+				if auth != "success" {
 					return errors.New("fail to Bybit private channel auth.")
 				}
+				o.logger.Printf("Subscribed to Bybit %s private channel\n", o.product)
+				// subscribe execution channel
+				w.getPerpPrivateSubscribe("execution")
 			}
 		}
-	case []interface{}:
-		data := message[0].(map[string]interface{})
-		if e, ok := data["e"].(string); ok {
-			switch e {
-			case "executionReport":
-				// order handling
-				o.handleReport(data)
-			case "outboundAccountInfo":
-				// balance handling
-			case "ticketInfo":
-				// pass
-			default:
-				// pass
-			}
-		}
-	default:
-
 	}
 	return nil
 }
 
-func (o *spotPrivateChannelBranch) handleReport(data map[string]interface{}) {
-	status, ok := data["X"].(string)
-	if !ok {
-		return
+// "execution"
+func (w *ws) getPerpPrivateSubscribe(channel string) error {
+	param := make(map[string]interface{})
+	param["op"] = "subscribe"
+	param["args"] = []string{channel}
+	req, err := json.Marshal(param)
+	if err != nil {
+		return err
 	}
-	switch {
-	case status == Filled || status == PartialFilled:
-		trade := new(UserTradeData)
-		if ts, ok := data["E"].(string); ok {
-			tsDec, _ := decimal.NewFromString(ts)
-			timeStamp := time.UnixMicro(int64(tsDec.InexactFloat64() * 1000))
-			trade.TimeStamp = timeStamp
-		}
-		if s, ok := data["s"].(string); ok {
-			trade.Symbol = s
-		}
-		if q, ok := data["l"].(string); ok {
-			qDec, _ := decimal.NewFromString(q)
-			trade.Qty = qDec
-		}
-		if p, ok := data["L"].(string); ok {
-			pDec, _ := decimal.NewFromString(p)
-			trade.Price = pDec
-		}
-		if o, ok := data["i"].(string); ok {
-			trade.Oid = o
-		}
-		if S, ok := data["S"].(string); ok {
-			if strings.EqualFold(S, "buy") {
-				trade.Side = UserTradeBuy
-			} else {
-				trade.Side = UserTradeSell
-			}
-		}
-		if f, ok := data["n"].(string); ok {
-			fDec, _ := decimal.NewFromString(f)
-			trade.Fee = fDec
-		}
-		if m, ok := data["m"].(bool); ok {
-			trade.IsMaker = m
-		}
-		if N, ok := data["N"].(string); ok {
-			trade.FeeAsset = N
-		}
-		if o, ok := data["o"].(string); ok {
-			trade.OrderType = o
-		}
-		// insert
-		o.insertTrade(trade)
-	default:
-		// later
+	// sending
+	if err := w.conn.WriteMessage(websocket.TextMessage, req); err != nil {
+		return err
 	}
+	return nil
+}
 
+func (o *perpPrivateChannelBranch) handleExecution(data map[string]interface{}) {
+	trade := new(UserTradeData)
+	// timestamp
+	if timestamp, ok := data["trade_time"].(string); ok {
+		layout := "2006-01-02T15:04:05.999999Z"
+		st, _ := time.Parse(layout, timestamp)
+		trade.TimeStamp = st
+	}
+	if q, ok := data["exec_qty"].(float64); ok {
+		qDec := decimal.NewFromFloat(q)
+		trade.Qty = qDec
+	}
+	if s, ok := data["symbol"].(string); ok {
+		trade.Symbol = s
+	}
+	if p, ok := data["price"].(float64); ok {
+		pDec := decimal.NewFromFloat(p)
+		trade.Price = pDec
+	}
+	if o, ok := data["order_id"].(string); ok {
+		trade.Oid = o
+	}
+	if S, ok := data["side"].(string); ok {
+		if strings.EqualFold(S, "buy") {
+			trade.Side = UserTradeBuy
+		} else {
+			trade.Side = UserTradeSell
+		}
+	}
+	if f, ok := data["exec_fee"].(float64); ok {
+		fDec := decimal.NewFromFloat(f)
+		trade.Fee = fDec
+		trade.FeeAsset = "USDT"
+	}
+	if m, ok := data["is_maker"].(bool); ok {
+		trade.IsMaker = m
+		if m {
+			trade.OrderType = "limit"
+		} else {
+			trade.OrderType = "market"
+		}
+
+	}
+	o.insertTrade(trade)
 }
