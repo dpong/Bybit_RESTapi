@@ -117,7 +117,7 @@ func (o *StreamMarketTradesBranch) maintainSession(ctx context.Context, errCh *c
 			if err := bybitSocket(ctx, o.product, o.symbol, "trade", o.logger, &o.tradeChan, errCh); err == nil {
 				return
 			} else {
-				o.logger.Warningf("reconnect FTX %s trade stream with err: %s\n", o.symbol, err.Error())
+				o.logger.Warningf("reconnect Bybit %s trade stream with err: %s\n", o.symbol, err.Error())
 			}
 		}
 	}
