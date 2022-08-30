@@ -479,3 +479,42 @@ func (p *Client) SetPerpRiskLimit(symbol, side string, riskID int) (result *SetL
 	}
 	return result, nil
 }
+
+type PositionModeSwitchResponse struct {
+	RetCode          int         `json:"ret_code"`
+	RetMsg           string      `json:"ret_msg"`
+	ExtCode          string      `json:"ext_code"`
+	Result           interface{} `json:"result"`
+	ExtInfo          interface{} `json:"ext_info"`
+	TimeNow          string      `json:"time_now"`
+	RateLimitStatus  int         `json:"rate_limit_status"`
+	RateLimitResetMs int64       `json:"rate_limit_reset_ms"`
+	RateLimit        int         `json:"rate_limit"`
+}
+
+// opts: MergedSingle, BothSide
+func (p *Client) PositionModeSwitch(symbol, mode string) (result *PositionModeSwitchResponse, err error) {
+	params := make(map[string]interface{})
+	params["symbol"] = strings.ToUpper(symbol)
+	params["mode"] = mode
+	body, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := p.sendRequest(ProductPerp, http.MethodPost, "/private/linear/position/switch-mode", body, nil, true)
+	if err != nil {
+		return nil, err
+	}
+	err = decode(res, &result)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, errors.New("response is nil")
+	}
+	if result.RetCode != 0 {
+		message := fmt.Sprintf("ret_code=%d, ret_msg=%s, ext_code=%s, ext_info=%s", result.RetCode, result.RetMsg, result.ExtCode, result.ExtInfo)
+		return nil, errors.New(message)
+	}
+	return result, nil
+}
